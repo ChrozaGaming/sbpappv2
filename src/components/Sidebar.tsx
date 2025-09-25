@@ -1,9 +1,8 @@
-// src/components/Sidebar.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type NavItem = {
   label: string;
@@ -15,30 +14,52 @@ const NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: HomeIcon },
   { label: "Penawaran", href: "/penawaran", icon: FileIcon },
   { label: "Surat PO", href: "/surat-po", icon: ClipboardIcon },
-  { label: "Absensi", href: "/absensi", icon: AbsensiIcon }, // 👈 tambahan
+  { label: "Absensi", href: "/dashboard/absensi/create-absensi", icon: AbsensiIcon },
 ];
 
-// Submenu Superadmin
 const SUPERADMIN_NAV: NavItem[] = [
   { label: "Create Absensi", href: "/superadmin/create-absensi", icon: PlusDocIcon },
 ];
 
+const normalize = (s: string) => {
+  if (!s) return "/";
+  const out = s.replace(/\/+$/g, "");
+  return out.length ? out : "/";
+};
+
+function isSegmentPrefix(base: string, path: string) {
+  base = normalize(base);
+  path = normalize(path);
+  if (base === "/") return path === "/";
+  if (path === base) return true;
+  return path.startsWith(base + "/");
+}
+
 export default function Sidebar({ className = "" }: { className?: string }) {
-  const pathname = usePathname();
-
-  // buka/tutup dropdown Superadmin
+  const pathname = usePathname() || "/";
   const [openSuper, setOpenSuper] = useState(false);
+  const [year, setYear] = useState<string>("");
 
-  // auto-buka jika sedang di route superadmin
-  useEffect(() => {
-    const saved = localStorage.getItem("sbp.sidebar.superadmin");
-    const isSuperPath = pathname?.startsWith("/superadmin/");
-    setOpenSuper(isSuperPath || saved === "1");
+  useEffect(() => setYear(String(new Date().getFullYear())), []);
+
+  const activeItem = useMemo(() => {
+    const path = normalize(pathname);
+    const all = [...NAV, ...SUPERADMIN_NAV];
+    const matches = all.filter((i) => isSegmentPrefix(i.href, path));
+    matches.sort((a, b) => normalize(b.href).length - normalize(a.href).length);
+    return matches[0] ?? null;
   }, [pathname]);
 
-  // persist state
   useEffect(() => {
-    localStorage.setItem("sbp.sidebar.superadmin", openSuper ? "1" : "0");
+    const saved = typeof window !== "undefined" ? localStorage.getItem("sbp.sidebar.superadmin") : null;
+    const inSuper = SUPERADMIN_NAV.some((i) => isSegmentPrefix(i.href, pathname));
+    setOpenSuper(inSuper || saved === "1");
+  }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sbp.sidebar.superadmin", openSuper ? "1" : "0");
+    }
   }, [openSuper]);
 
   return (
@@ -50,7 +71,7 @@ export default function Sidebar({ className = "" }: { className?: string }) {
       ].join(" ")}
       aria-label="Sidebar utama"
     >
-      {/* Brand (dark header) */}
+      {/* Brand */}
       <div className="relative flex h-20 items-center gap-3 border-b border-gray-200 bg-gradient-to-r from-gray-900 to-gray-800 px-4">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/10">
           <LogoMark />
@@ -61,15 +82,14 @@ export default function Sidebar({ className = "" }: { className?: string }) {
         </div>
       </div>
 
-      {/* Nav */}
+      {/* Nav utama */}
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
           Menu
         </p>
         <ul className="space-y-1">
           {NAV.map((item) => {
-            const active =
-              pathname === item.href || pathname?.startsWith(item.href + "/");
+            const active = activeItem?.href === item.href;
             return (
               <li key={item.href}>
                 <Link
@@ -77,13 +97,10 @@ export default function Sidebar({ className = "" }: { className?: string }) {
                   aria-current={active ? "page" : undefined}
                   className={[
                     "group relative flex items-center gap-3 rounded-xl px-5 py-3 text-[15px] font-medium outline-none transition",
-                    active
-                      ? "bg-gray-900 text-white shadow-sm"
-                      : "text-gray-700 hover:bg-gray-100",
+                    active ? "bg-gray-900 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100",
                     "focus-visible:ring-2 focus-visible:ring-gray-300",
                   ].join(" ")}
                 >
-                  {/* Active accent bar */}
                   <span
                     aria-hidden
                     className={[
@@ -94,9 +111,7 @@ export default function Sidebar({ className = "" }: { className?: string }) {
                   <item.icon
                     className={[
                       "h-5 w-5 transition-colors",
-                      active
-                        ? "text-white"
-                        : "text-gray-500 group-hover:text-gray-700",
+                      active ? "text-white" : "text-gray-500 group-hover:text-gray-700",
                     ].join(" ")}
                   />
                   <span className="truncate">{item.label}</span>
@@ -105,7 +120,7 @@ export default function Sidebar({ className = "" }: { className?: string }) {
             );
           })}
 
-          {/* ---------- Superadmin dropdown ---------- */}
+          {/* Superadmin dropdown */}
           <li className="mt-3">
             <button
               type="button"
@@ -135,7 +150,6 @@ export default function Sidebar({ className = "" }: { className?: string }) {
               />
             </button>
 
-            {/* Submenu */}
             <div
               className={[
                 "overflow-hidden transition-[grid-template-rows] duration-300",
@@ -144,9 +158,7 @@ export default function Sidebar({ className = "" }: { className?: string }) {
             >
               <ul className="min-h-0 space-y-1 pl-3 pr-2 pt-2">
                 {SUPERADMIN_NAV.map((item) => {
-                  const active =
-                    pathname === item.href ||
-                    pathname?.startsWith(item.href + "/");
+                  const active = activeItem?.href === item.href;
                   return (
                     <li key={item.href}>
                       <Link
@@ -154,17 +166,13 @@ export default function Sidebar({ className = "" }: { className?: string }) {
                         aria-current={active ? "page" : undefined}
                         className={[
                           "group flex items-center gap-3 rounded-lg px-4 py-2.5 text-[14px] font-medium transition",
-                          active
-                            ? "bg-gray-900 text-white shadow-sm"
-                            : "text-gray-700 hover:bg-gray-100",
+                          active ? "bg-gray-900 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100",
                         ].join(" ")}
                       >
                         <item.icon
                           className={[
-                            "h-4.5 w-4.5", // sedikit lebih kecil dari menu utama
-                            active
-                              ? "text-white"
-                              : "text-gray-500 group-hover:text-gray-700",
+                            "h-[18px] w-[18px]",
+                            active ? "text-white" : "text-gray-500 group-hover:text-gray-700",
                           ].join(" ")}
                         />
                         <span className="truncate">{item.label}</span>
@@ -178,10 +186,11 @@ export default function Sidebar({ className = "" }: { className?: string }) {
         </ul>
       </nav>
 
-      {/* Footer */}
       <div className="border-t border-gray-200 p-3">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-gray-500">© {new Date().getFullYear()} SBP</span>
+          <span className="text-[11px] text-gray-500">
+            © <span suppressHydrationWarning>{year}</span> SBP
+          </span>
           <span className="text-[11px] text-gray-400">v1.0</span>
         </div>
       </div>
@@ -189,7 +198,6 @@ export default function Sidebar({ className = "" }: { className?: string }) {
   );
 }
 
-/* --------- Icons --------- */
 function LogoMark() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>

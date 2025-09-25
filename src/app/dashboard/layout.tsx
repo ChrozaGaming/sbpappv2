@@ -4,8 +4,8 @@ import AppShell from "@/components/AppShell";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+
 type User = { name?: string; email?: string };
 
 function useWibClock() {
@@ -30,7 +30,7 @@ function useWibClock() {
   return now;
 }
 
-function useAuthGuard() {
+function useAuthGuard(): User | null {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   useEffect(() => {
@@ -43,6 +43,7 @@ function useAuthGuard() {
       try {
         const res = await fetch(`${API_BASE}/api/me`, {
           headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
         });
         if (!res.ok) throw new Error("invalid token");
         const d = await res.json();
@@ -59,7 +60,7 @@ function useAuthGuard() {
   return user;
 }
 
-export default function DashboardPage() {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useAuthGuard();
   const now = useWibClock();
 
@@ -69,4 +70,34 @@ export default function DashboardPage() {
         <div className="h-24 rounded-2xl bg-gray-200" />
       </AppShell>
     );
+  }
+
+  return (
+    <AppShell>
+      <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="min-w-0">
+            <p className="text-sm text-gray-500">Selamat datang</p>
+            <h1 className="truncate text-2xl font-semibold leading-tight text-gray-900">
+              {user.name && user.name.trim() !== "" ? user.name : "Pengguna"}
+            </h1>
+            <p className="truncate text-sm text-gray-500">
+              {user.email ?? "email@domain.com"}
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800">
+            <svg viewBox="0 0 24 24" className="h-4 w-4 text-gray-700" aria-hidden>
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
+              <path d="M12 7v5l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            </svg>
+            <span className="tabular-nums" suppressHydrationWarning>
+              {now || "—"}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {children}
+    </AppShell>
+  );
 }

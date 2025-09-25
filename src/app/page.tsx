@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -180,7 +179,6 @@ export default function Page() {
   );
 }
 
-/* icons & illustration (same as sebelumnya) */
 function GoogleIcon() {
   /* ... */ return (
     <svg viewBox="0 0 24 24" className="h-5 w-5">
@@ -259,7 +257,7 @@ function EyeOffIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 function HeroIllustration() {
-  /* sama seperti yang kamu punya */ return (
+  return (
     <svg viewBox="0 0 640 520" className="w-full">
       <defs>
         <linearGradient id="g1" x1="0" x2="1">

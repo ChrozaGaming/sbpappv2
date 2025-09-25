@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* === Theme tokens (palette baru) === */
+@theme {
+  --color-primary: #667081; /* teks & hover */
+  --color-secondary: #D8EBF4; /* background lembut */
+  --color-accent: #567AAA;    /* CTA / aksen */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* === Base === */
+html, body, :root { height: 100%; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+    Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* === Components === */
+@layer components {
+  .bg-hero {
+    /* Flat background sesuai contoh (bisa diganti gradien ringan kalau mau) */
+    @apply bg-[color:var(--color-secondary)];
+  }
+
+  .card {
+    @apply rounded-2xl bg-white/95 p-8 shadow-2xl ring-1 ring-black/5 backdrop-blur;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-[color:var(--color-accent)]/40 bg-white
+           px-10 py-3 text-[color:var(--color-primary)]
+           placeholder:text-[color:var(--color-primary)]/55 shadow-sm outline-none transition
+           focus:border-[color:var(--color-accent)]/60 focus:ring-2 focus:ring-[color:var(--color-accent)]/30;
+  }
+
+  .btn-primary {
+    @apply inline-flex w-full items-center justify-center rounded-xl
+           bg-[color:var(--color-accent)] px-4 py-3 font-semibold text-white
+           shadow-sm ring-1 ring-inset ring-[color:var(--color-accent)]/20
+           transition hover:bg-[color:var(--color-primary)]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/50;
+  }
+
+  .btn-social {
+    @apply inline-flex w-full items-center justify-center gap-3 rounded-xl
+           bg-white px-4 py-3 text-[color:var(--color-primary)]
+           shadow-sm ring-1 ring-black/5 transition hover:shadow-md;
+  }
+
+  .hr-or {
+    @apply grid grid-cols-[1fr_auto_1fr] items-center gap-4 text-xs text-[color:var(--color-primary)]/60;
+  }
 }

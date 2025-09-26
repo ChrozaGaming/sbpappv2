@@ -120,7 +120,6 @@ export default function Sidebar({ className = "" }: { className?: string }) {
             );
           })}
 
-          {/* Superadmin dropdown */}
           <li className="mt-3">
             <button
               type="button"

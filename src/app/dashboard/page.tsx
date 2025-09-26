@@ -1,72 +1,26 @@
 "use client";
 
-import AppShell from "@/components/AppShell";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
-type User = { name?: string; email?: string };
-
-function useWibClock() {
-  const [now, setNow] = useState("");
-  useEffect(() => {
-    const fmt = new Intl.DateTimeFormat("id-ID", {
-      timeZone: "Asia/Jakarta",
-      hour12: false,
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-    const tick = () => setNow(fmt.format(new Date()) + " WIB");
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-  return now;
-}
-
-function useAuthGuard() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.replace("/");
-      return;
-    }
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("invalid token");
-        const d = await res.json();
-        const u = { name: d?.name, email: d?.email };
-        localStorage.setItem("user", JSON.stringify(u));
-        setUser(u);
-      } catch {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        router.replace("/");
-      }
-    })();
-  }, [router]);
-  return user;
-}
+import NotifikasiAbsensi from "@/components/Notifikasi/Absensi";
 
 export default function DashboardPage() {
-  const user = useAuthGuard();
-  const now = useWibClock();
+  const [email, setEmail] = useState<string | undefined>(undefined);
 
-  if (!user) {
-    return (
-      <AppShell>
-        <div className="h-24 rounded-2xl bg-gray-200" />
-      </AppShell>
-    );
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u?.email) setEmail(u.email as string);
+      }
+    } catch {}
+  }, []);
+
+  return (
+    <>
+      <NotifikasiAbsensi email={email} />
+      <section className="space-y-4">
+      </section>
+    </>
+  );
 }

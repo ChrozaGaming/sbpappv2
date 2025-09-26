@@ -33,6 +33,7 @@ function useWibClock() {
 function useAuthGuard(): User | null {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -57,12 +58,20 @@ function useAuthGuard(): User | null {
       }
     })();
   }, [router]);
+
   return user;
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const user = useAuthGuard();
   const now = useWibClock();
+
+  const onLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.replace("/");
+  };
 
   if (!user) {
     return (
@@ -81,18 +90,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <h1 className="truncate text-2xl font-semibold leading-tight text-gray-900">
               {user.name && user.name.trim() !== "" ? user.name : "Pengguna"}
             </h1>
-            <p className="truncate text-sm text-gray-500">
-              {user.email ?? "email@domain.com"}
-            </p>
+            <p className="truncate text-sm text-gray-500">{user.email ?? "email@domain.com"}</p>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 text-gray-700" aria-hidden>
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
-              <path d="M12 7v5l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            </svg>
-            <span className="tabular-nums" suppressHydrationWarning>
-              {now || "—"}
-            </span>
+
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800">
+              <svg viewBox="0 0 24 24" className="h-4 w-4 text-gray-700" aria-hidden>
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                <path d="M12 7v5l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+              </svg>
+              <span className="tabular-nums" suppressHydrationWarning>
+                {now || "—"}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={onLogout}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
+              aria-label="Keluar"
+              title="Keluar"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+                <path
+                  d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9M10 17l5-5-5-5M15 12H3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Keluar
+            </button>
           </div>
         </div>
       </section>

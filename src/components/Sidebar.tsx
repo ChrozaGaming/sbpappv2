@@ -18,7 +18,7 @@ const NAV: NavItem[] = [
 ];
 
 const SUPERADMIN_NAV: NavItem[] = [
-  { label: "Create Absensi", href: "/superadmin/create-absensi", icon: PlusDocIcon },
+  { label: "Create Users", href: "/dashboard/superadmin/users/create-users", icon: PlusDocIcon },
 ];
 
 const normalize = (s: string) => {
